@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Button, Row, Col, Typography } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import CreateAgentForm from '../components/CreateAgentForm';
 
 const { Title, Paragraph } = Typography;
 
 const LandingPage = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const navigate = useNavigate();
 
     const handleCreate = (values) => {
         console.log('Agent Created:', values);
@@ -14,13 +16,15 @@ const LandingPage = () => {
 
     return (
         <div style={{ position: 'relative', height: '100vh', padding: '20px' }}>
-            <Button 
-                type="primary" 
-                style={{ position: 'absolute', top: 20, right: 20 }} 
-                onClick={() => setIsModalVisible(true)}
-            >
-                Create Agent
-            </Button>
+            {/* Buttons Container */}
+            <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '10px' }}>
+                <Button type="primary" onClick={() => setIsModalVisible(true)}>
+                    Create Agent
+                </Button>
+                <Button onClick={() => navigate('/my-agents')}>
+                    View Agents
+                </Button>
+            </div>
 
             <Row justify="center" align="middle" style={{ height: '100%' }}>
                 <Col span={12} style={{ textAlign: 'center' }}>
