@@ -27,6 +27,8 @@ const CreateAgentForm = ({ visible, onCreate, onCancel }) => {
             const payload = {
                 agentName: values.agentName,
                 sqlUsername: values.sqlUsername,
+                sqlDbHost: values.sqlDbHost,
+                sqlDbTable: values.sqlDbTable,
                 sqlPassword: values.sqlPassword,
                 instructions: values.instructions,
                 description: values.description || "",
@@ -79,6 +81,14 @@ const CreateAgentForm = ({ visible, onCreate, onCancel }) => {
                 </Form.Item>
 
                 <Form.Item name="sqlUsername" label="SQL Username" rules={[{ required: true, message: 'Please enter your SQL username!' }]}>
+                    <Input placeholder="Enter SQL username" />
+                </Form.Item>
+
+                <Form.Item name="sqlDbHost" label="SQL DB Host" rules={[{ required: true, message: 'Please enter your SQL DB Host Name!' }]}>
+                    <Input placeholder="Enter SQL username" />
+                </Form.Item>
+
+                <Form.Item name="sqlDbTable" label="SQL DB Table" rules={[{ required: true, message: 'Please enter your SQL DB Table!' }]}>
                     <Input placeholder="Enter SQL username" />
                 </Form.Item>
 

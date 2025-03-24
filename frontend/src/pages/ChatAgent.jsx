@@ -3,7 +3,9 @@ import { useParams } from "react-router-dom";
 import { Card, Input, Button, Avatar, Typography, List, Spin, message } from "antd";
 import axios from "axios";
 import { UserOutlined, RobotOutlined } from "@ant-design/icons";
-import "./chat.css"
+import Visualization from "../Visualisation/Visualisation";
+import "./chat.css";
+
 const { Title } = Typography;
 const { TextArea } = Input;
 
@@ -12,6 +14,7 @@ const ChatAgent = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
+    const [visualizationData, setVisualizationData] = useState(null);
     const chatContainerRef = useRef(null);
 
     useEffect(() => {
@@ -39,15 +42,23 @@ const ChatAgent = () => {
             console.log("API Response:", response.data);
 
             let botResponse = "No response received";
+            let parsedData = null;
 
             if (Array.isArray(response.data.response) && response.data.response.length > 0) {
                 const firstMessage = response.data.response[0];
+
                 if (firstMessage.type === "text" && firstMessage.text && firstMessage.text.value) {
                     botResponse = firstMessage.text.value;
+                } 
+                
+                // Check if the response contains visualization data
+                if (firstMessage.type === "data" && firstMessage.data) {
+                    parsedData = firstMessage.data;
                 }
             }
 
             setMessages([...newMessages, { sender: "bot", text: botResponse }]);
+            if (parsedData) setVisualizationData(parsedData);
         } catch (error) {
             console.error("Chat API Error:", error);
             message.error("Failed to get a response. Try again.");
@@ -58,47 +69,55 @@ const ChatAgent = () => {
 
     return (
         <div className="container">
-        <Card className="chatCard">
-            <Title level={3} className="title">Chat with Assistant</Title>
-    
-            <div ref={chatContainerRef} className="messageContainer">
-                <List
-                    dataSource={messages}
-                    renderItem={(msg) => (
-                        <List.Item className={msg.sender === "user" ? "userMessage" : "botMessage"}>
-                            <Avatar icon={msg.sender === "user" ? <UserOutlined /> : <RobotOutlined />} className="avatar" />
-                            <div className="messageBubble">{msg.text}</div>
-                        </List.Item>
+            <Card className="chatCard">
+                <Title level={3} className="title">Chat with Assistant</Title>
+
+                <div ref={chatContainerRef} className="messageContainer">
+                    <List
+                        dataSource={messages}
+                        renderItem={(msg) => (
+                            <List.Item className={msg.sender === "user" ? "userMessage" : "botMessage"}>
+                                <Avatar icon={msg.sender === "user" ? <UserOutlined /> : <RobotOutlined />} className="avatar" />
+                                <div className="messageBubble">{msg.text}</div>
+                            </List.Item>
+                        )}
+                    />
+                    {loading && (
+                        <div className="loadingIndicator">
+                            <Spin size="small" /> <span className="typingText">AI is typing...</span>
+                        </div>
                     )}
-                />
-                {loading && (
-                    <div className="loadingIndicator">
-                        <Spin size="small" /> <span className="typingText">AI is typing...</span>
-                    </div>
-                )}
-            </div>
-    
-            <div className="inputContainer">
-                <TextArea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                        }
-                    }}
-                    placeholder="Ask something..."
-                    autoSize={{ minRows: 1, maxRows: 4 }}
-                    className="textArea"
-                />
-    
-                <Button type="primary" className="sendButton" onClick={handleSendMessage} disabled={loading}>
-                    Send
-                </Button>
-            </div>
-        </Card>
-    </div>    
+                </div>
+
+                <div className="inputContainer">
+                    <TextArea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage();
+                            }
+                        }}
+                        placeholder="Ask something..."
+                        autoSize={{ minRows: 1, maxRows: 4 }}
+                        className="textArea"
+                    />
+
+                    <Button type="primary" className="sendButton" onClick={handleSendMessage} disabled={loading}>
+                        Send
+                    </Button>
+                </div>
+            </Card>
+
+            {/* Render Visualization Component if data is available */}
+            {visualizationData && (
+                <Card className="visualizationCard">
+                    <Title level={4}>Data Visualization</Title>
+                    <Visualization data={visualizationData} />
+                </Card>
+            )}
+        </div>
     );
 };
 
