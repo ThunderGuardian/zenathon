@@ -244,12 +244,11 @@ let threadId = "thread_45ucgnRFAl1PstMSOvKy2PLC"; // Store thread ID for reuse
 let assistantId = "assistantId"; // Store thread ID for reuse
 
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "MySQL@12345",
-  database: "zenathon"
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 });
-
 // Function to execute queries dynamically
 const executeQueries = async (queries) => {
   return new Promise((resolve) => {
