@@ -5,25 +5,25 @@ import { StatusCodes } from "http-status-codes";
 import mysql from "mysql2"
 import OpenAI from "openai";
 import dotenv from "dotenv";
-// const generateInstructions = (schemaDescription) => {
-//   return `
-// You are an AI assistant specializing in SQL query generation for database analytics. 
-// Your task is to generate SQL queries based on user prompts. Do not perform calculations; instead, provide the appropriate SQL query to fetch the required data.
+const generateInstructions = (schemaDescription) => {
+  return `
+You are an AI assistant specializing in SQL query generation for database analytics. 
+Your task is to generate SQL queries based on user prompts. Do not perform calculations; instead, provide the appropriate SQL query to fetch the required data.
 
-// Always return your responses as an array of objects like this:
-// [
-//   {"query_description": "SQL Query"},
-//   {"another_query": "SQL Query"}
-// ]
+Always return your responses as an array of objects like this:
+[
+  {"query_description": "SQL Query"},
+  {"another_query": "SQL Query"}
+]
 
-// You should provide only the SQL query needed to extract the relevant data, without performing any calculations yourself.
+You should provide only the SQL query needed to extract the relevant data, without performing any calculations yourself.
 
-// Here is the database schema:
-// ${schemaDescription}
+Here is the database schema:
+${schemaDescription}
 
-// Use this schema to generate appropriate SQL queries in response to user queries.
-//   `;
-// };
+Use this schema to generate appropriate SQL queries in response to user queries.
+  `;
+};
 
 const formatTableSchema = (tables) => {
   if (!Array.isArray(tables) || tables.length === 0) {
@@ -73,55 +73,8 @@ export const createAssistant = async (req, res, next) => {
     }
 
     const formattedSchema = formatTableSchema(tables);
-    // instructions = generateInstructions(formattedSchema);
-    instructions = `
-You are an agent which first provides SQL queries for user prompts based on the MySQL database schema provided to you below. Those SQL queries later will be executed, and all the data will be provided to you. Now you should precisely and accurately process the data and provide what the user wants.
-
-You should provide the SQL queries in this format so you can provide more than one query to be executed:
-queries = [ { "Query Description": "<The query>" }, ];
-
-The data will also be provided in this format to you:
-result = [ { "Query Description": "<The query result>" }, ];
-
-You should be accurate and precise since each record is valuable while processing.
-
-Following is the database schema:
-
-1. Customer Table: customers
-   - CustomerID: An integer that serves as the Primary Key. It uniquely identifies each customer.
-   - FirstName: A string (VARCHAR) with a maximum length of 50 characters to store the customer's first name.
-   - LastName: A string (VARCHAR) with a maximum length of 50 characters to store the customer's last name.
-   - Email: A string (VARCHAR) with a maximum length of 100 characters to store the customer's email address.
-   - PhoneNumber: A string (VARCHAR) with a maximum length of 15 characters to store the customer's phone number.
-   - Address: A string (VARCHAR) with a maximum length of 255 characters to store the customer's address.
-
-2. Product Table: products
-   - ProductID: An integer that serves as the Primary Key. It uniquely identifies each product.
-   - ProductName: A string (VARCHAR) with a maximum length of 100 characters to describe the product's name.
-   - Description: A text field to provide details about the product.
-   - Price: A decimal value representing the price of the product.
-   - StockQuantity: An integer indicating how many units are available in stock.
-
-3. Invoice Table: invoices
-   - InvoiceID: An integer that serves as the Primary Key. It uniquely identifies each invoice transaction.
-   - CustomerID: Data Type: Integer. Purpose: Links an invoice to a specific customer who made a purchase.
-   - ProductID: Data Type: Integer. References: The ProductID column in the Product table.
-   - InvoiceDate: Data Type: DateTime.
-   - Quantity: Data Type: Integer.
-   - TotalAmount: Data Type: Decimal.
-
-4. Inventory Restocking Table: inventory_restock
-   - RestockID (Primary Key, INT, AUTO_INCREMENT): Uniquely identifies each restocking event.
-   - ProductID (Foreign Key, INT → products.ProductID): Indicates which product was restocked.
-   - RestockDate (DATETIME): The date and time when restocking occurred.
-   - QuantityAdded (INT): The number of units added to stock.
-   - Supplier (VARCHAR(100)): Name of the supplier who provided the stock.
-
-Relationships:
-- Customer and Invoice Relationship: Each entry in the Invoice table is associated with one entry in the Customer table through its foreign key (CustomerID). This establishes which customer made which purchase(s).
-- Product and Invoice Relationship: Each entry in an Invoice can be linked back to one or more entries in Products via its foreign key (ProductID). This indicates what products were included within any given transaction recorded under an invoice.
-- Product and Inventory Restocking Relationship: Each entry in the Inventory Restocking table is associated with one entry in the Products table through its foreign key (ProductID). This records when a product was restocked, how many units were added, and from which supplier.
-`;
+    instructions = generateInstructions(formattedSchema);
+   
 
 
     const openai = await getOpenAIInstance();
@@ -132,7 +85,7 @@ Relationships:
       model: userSelectedModel,
     });
 
-    console.log("OPPPP", openAIAssistant);
+
 
 
     if (!openAIAssistant?.id) {
@@ -140,9 +93,6 @@ Relationships:
     }
 
     const assistantId = openAIAssistant.id;
-
-    console.log("inn", instructions);
-
 
     const newAssistant = new AssistantModel({
       assistant_id: assistantId,
@@ -179,9 +129,8 @@ export const getAllAssistants = async (req, res) => {
 };
 
 export const createChatPerAssistant = async (req, res) => {
-  const { assistantId } = req.params;  // Get assistantId from URL
+  const { assistantId } = req.params; 
   const { question } = req.body;
-  console.log("Received question:", question);
 
   try {
     const openai = await getOpenAIInstance();
@@ -190,42 +139,12 @@ export const createChatPerAssistant = async (req, res) => {
     if (!existingAssistant) {
       return res.status(404).json({ error: "Assistant not found" });
     }
-// 
-    // const thread = await openai.beta.threads.create();
-    const threadId = "thread_45ucgnRFAl1PstMSOvKy2PLC";
-    console.log("Thread ID", threadId);
+    const thread = await openai.beta.threads.create();
+    const threadId = thread.id;
 
-   let mostRecentMessage = await sqlAssistantChatController(question);
-
-    // await openai.beta.threads.messages.create(threadId, {
-    //     role: "user",
-    //     content: question,
-    // });
-
-    // const run = await openai.beta.threads.runs.create(threadId, {
-    //     assistant_id: assistantId,
-    // });
-
-    // let runId = run.id;
-    // let retrieveRun = await openai.beta.threads.runs.retrieve(threadId, runId);
-
-    // while (retrieveRun.status !== "completed") {
-    //     await new Promise((resolve) => setTimeout(resolve, 1000));
-    //     retrieveRun = await openai.beta.threads.runs.retrieve(threadId, runId);
-
-    //     if (["failed", "cancelled", "expired"].includes(retrieveRun.status)) {
-    //         return res.status(500).json({ error: "AI response failed. Please try again." });
-    //     }
-    // }
-
-    // const threadMessages = await openai.beta.threads.messages.list(threadId);
-    // const mostRecentMessage = threadMessages.data.find(
-    //     (msg) => msg.run_id === runId && msg.role === "assistant"
-    // );
+   let mostRecentMessage = await sqlAssistantChatController(question, threadId, assistantId, openai);
 
     if (mostRecentMessage) {
-      console.log("MOSSSSSSSSSSS", mostRecentMessage);
-      
         return res.status(201).json({
             response: mostRecentMessage.content,
             thread_id: threadId,
@@ -238,10 +157,6 @@ export const createChatPerAssistant = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 };
-
-const openai = new OpenAI({ apiKey: ""})
-let threadId = "thread_45ucgnRFAl1PstMSOvKy2PLC"; // Store thread ID for reuse
-let assistantId = "assistantId"; // Store thread ID for reuse
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -299,22 +214,15 @@ function extractQueries(response) {
   return queries;
 }
 
-async function sendQueryResultsToAssistant(results) {
+async function sendQueryResultsToAssistant(results,threadId, assistantId, openai,question) {
   try {
-
-      // const thread = await openai.beta.threads.create();
-      // threadId = thread.id;
-      // console.log(`🆕 Created new thread ID: ${threadId}`);
-
-
-    //****Replace the userMessage wth the prompt at the end******
-    const userMessage = `Here are the SQL query results: ${JSON.stringify(results)}. Find Monthly Restocking Trends.`;
+    const userMessage = `Here are the SQL query results: ${JSON.stringify(results)}. And answer the question ${question}`;
     await openai.beta.threads.messages.create(threadId, {
       role: 'user',
       content: userMessage
     });
 
-    const run = await openai.beta.threads.runs.create(threadId, { assistant_id: "asst_bshLvBNMEx9bOMx1ZoGVua7U" });
+    const run = await openai.beta.threads.runs.create(threadId, { assistant_id: assistantId });
 
     let completed = false;
     while (!completed) {
@@ -333,16 +241,10 @@ async function sendQueryResultsToAssistant(results) {
     console.error('🚨 OpenAI API Error:', error.message);
   }
 }
-async function chatAssistant(prompt) {
+async function chatAssistant(prompt,threadId, assistantId, openai) {
 
   try {
-    if (!threadId) {
-      const thread = await openai.beta.threads.create();
-      threadId = thread.id;
-      console.log(`🆕 Created new thread ID: ${threadId}`);
-    } else {
-      console.log(`🔄 Reusing thread ID: ${threadId}`);
-    }
+  
 
 
     await openai.beta.threads.messages.create(threadId, {
@@ -350,7 +252,7 @@ async function chatAssistant(prompt) {
       content: prompt
     });
 
-    const run = await openai.beta.threads.runs.create(threadId, { assistant_id: "asst_bshLvBNMEx9bOMx1ZoGVua7U" });
+    const run = await openai.beta.threads.runs.create(threadId, { assistant_id: assistantId });
 
     let completed = false;
     while (!completed) {
@@ -373,23 +275,14 @@ async function chatAssistant(prompt) {
 }
 
 
-async function sqlAssistantChatController(question) {
+async function sqlAssistantChatController(question, threadId, assistantId, openai) {
   console.log("reached?");
 
   try {
     let prompt = question;
     console.log("prompt", prompt);
 
-    const queries=await chatAssistant(prompt);
-    // const queries = [
-    //   {
-    //     "Sales Data Analysis": "SELECT p.ProductID, p.ProductName, SUM(i.Quantity) AS TotalSold, COUNT(i.InvoiceID) AS SalesFrequency FROM products p JOIN invoices i ON p.ProductID = i.ProductID GROUP BY p.ProductID ORDER BY TotalSold DESC;"
-    //   },
-    //   {
-    //     "Restocking Frequency": "SELECT p.ProductID, p.ProductName, SUM(ir.QuantityAdded) AS TotalRestocked, COUNT(ir.RestockID) AS RestockFrequency FROM products p JOIN inventory_restock ir ON p.ProductID = ir.ProductID GROUP BY p.ProductID ORDER BY TotalRestocked DESC;"
-    //   },
-    // ];
-    // Convert array of objects into a single object
+    const queries=await chatAssistant(prompt,threadId, assistantId, openai);
     let formattedQueries = queries.reduce((acc, obj) => {
       return { ...acc, ...obj };
     }, {});
@@ -397,10 +290,8 @@ async function sqlAssistantChatController(question) {
 
 
     const results = await executeQueries(formattedQueries);
-
-    console.log('✅ Query Results:', results);
     console.log(JSON.stringify(results, null, 2));
-    const agentResponse = await sendQueryResultsToAssistant(results);
+    const agentResponse = await sendQueryResultsToAssistant(results,threadId, assistantId, openai,question);
     return agentResponse;
   } catch (error) {
     console.error('🚨 Unexpected Error:', error.message);
