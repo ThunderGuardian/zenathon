@@ -30,7 +30,7 @@ Steps to Run Locally
 
 Clone the repository:
 
-git clone https://github.com/ThunderGuardian/zenathon
+git clone https://github.com/your-repo/zenathon.git
 cd zenathon
 
 Install dependencies:
@@ -43,11 +43,11 @@ Configure the backend to connect to MySQL.
 
 Run the backend:
 
-npm run dev
+node server.js
 
 Start the frontend:
 
-npm run dev
+npm start
 
 Database Schema
 
@@ -113,6 +113,10 @@ The AI agent responds with structured data that is visualized using D3.js. Examp
 
 The frontend visualizes this as a line chart, bar graph, or other graphical representation.
 
+Sample Dashboard Image
+
+
+
 Embeddable Code
 
 <script src="https://yourdomain.com/sql-agent.js"></script>
@@ -135,8 +139,6 @@ More interactive and customizable visualizations
 
 Contributors
 
-1. Sayeem Khan
-2. Afshan Khan
+Sayeem Khan
 
-
-
+Afshan Khan
