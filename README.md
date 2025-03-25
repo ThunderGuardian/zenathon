@@ -2,7 +2,7 @@ Zenathon
 
 Project Overview
 
-Zenathon is an AI-powered SQL agent designed to work locally, enabling users to dynamically interact with their MySQL database. This agent generates and executes SQL queries, providing real-time responses and visual analytics in a dashboard format. Additionally, an embeddable script allows easy integration of the SQL agent into external websites.
+This web app creates AI-powered SQL agents for Web Applications which uses MySQL Database, enabling users to dynamically interact with their MySQL database. This agent takes user queries generates SQL queries dynamically based on the user prompt, later excutes the SQL queries and analyse the excuted query results providing real-time responses and visual analytics. Additionally, an embeddable script allows easy integration of the SQL agent into external Web Applications.
 
 Features
 
